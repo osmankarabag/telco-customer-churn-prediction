@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telco Müşteri Kaybı Tahmin Sistemi</title>
+    <meta name="description" content="Makine öğrenmesi tabanlı müşteri kaybı (churn) tahmin sistemi">
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animasyonlu Arka Plan -->
+    <div class="bg-animation">
+        <div class="bg-circle bg-circle-1"></div>
+        <div class="bg-circle bg-circle-2"></div>
+        <div class="bg-circle bg-circle-3"></div>
+    </div>
+
+    <div class="container">
+        <!-- Üst Başlık -->
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <circle cx="16" cy="16" r="14" stroke="url(#grad)" stroke-width="2.5" fill="none"/>
+                        <path d="M10 16.5L14 20.5L22 12.5" stroke="url(#grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <defs><linearGradient id="grad" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#6C63FF"/><stop offset="1" stop-color="#00D2FF"/></linearGradient></defs>
+                    </svg>
+                </div>
+                <div>
+                    <h1>Müşteri Kaybı Tahmini</h1>
+                    <p class="subtitle">Makine Öğrenmesi Tabanlı Churn Tahmin Sistemi</p>
+                </div>
+            </div>
+            <div class="model-badge">
+                <span class="badge-dot"></span>
+                <span>{{ model_name }} &bull; Doğruluk: {{ "%.1f"|format(accuracy * 100) }}%</span>
+            </div>
+        </header>
+
+        <!-- Ana İçerik -->
+        <main>
+            <form id="prediction-form" class="form-grid">
+
+                <!-- Demografik Bilgiler -->
+                <section class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        </div>
+                        <h2>👤 Demografik Bilgiler</h2>
+                    </div>
+                    <div class="fields-row">
+                        <div class="field">
+                            <label for="gender">Cinsiyet</label>
+                            <select id="gender" name="gender" required>
+                                <option value="Male">Erkek</option>
+                                <option value="Female">Kadın</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="SeniorCitizen">Yaşlı Müşteri mi?</label>
+                            <select id="SeniorCitizen" name="SeniorCitizen" required>
+                                <option value="0">Hayır</option>
+                                <option value="1">Evet</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="Partner">Eşi / Partneri Var mı?</label>
+                            <select id="Partner" name="Partner" required>
+                                <option value="Yes">Evet</option>
+                                <option value="No">Hayır</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="Dependents">Bakmakla Yükümlü Olduğu Kişi Var mı?</label>
+                            <select id="Dependents" name="Dependents" required>
+                                <option value="No">Hayır</option>
+                                <option value="Yes">Evet</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Servis Bilgileri -->
+                <section class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        </div>
+                        <h2>📡 Servis Bilgileri</h2>
+                    </div>
+                    <div class="fields-row">
+                        <div class="field">
+                            <label for="PhoneService">Telefon Servisi</label>
+                            <select id="PhoneService" name="PhoneService" required>
+                                <option value="Yes">Evet</option>
+                                <option value="No">Hayır</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="MultipleLines">Çoklu Hat</label>
+                            <select id="MultipleLines" name="MultipleLines" required>
+                                <option value="No">Hayır</option>
+                                <option value="Yes">Evet</option>
+                                <option value="No phone service">Telefon servisi yok</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="InternetService">İnternet Servisi</label>
+                            <select id="InternetService" name="InternetService" required>
+                                <option value="Fiber optic">Fiber Optik</option>
+                                <option value="DSL">DSL</option>
+                                <option value="No">Yok</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="OnlineSecurity">Çevrimiçi Güvenlik</label>
+                            <select id="OnlineSecurity" name="OnlineSecurity" required>
+                                <option value="No">Hayır</option>
+                                <option value="Yes">Evet</option>
+                                <option value="No internet service">İnternet servisi yok</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fields-row">
+                        <div class="field">
+                            <label for="OnlineBackup">Çevrimiçi Yedekleme</label>
+                            <select id="OnlineBackup" name="OnlineBackup" required>
+                                <option value="No">Hayır</option>
+                                <option value="Yes">Evet</option>
+                                <option value="No internet service">İnternet servisi yok</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="DeviceProtection">Cihaz Koruma</label>
+                            <select id="DeviceProtection" name="DeviceProtection" required>
+                                <option value="No">Hayır</option>
+                                <option value="Yes">Evet</option>
+                                <option value="No internet service">İnternet servisi yok</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="TechSupport">Teknik Destek</label>
+                            <select id="TechSupport" name="TechSupport" required>
+                                <option value="No">Hayır</option>
+                                <option value="Yes">Evet</option>
+                                <option value="No internet service">İnternet servisi yok</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="StreamingTV">TV Yayın Akışı</label>
+                            <select id="StreamingTV" name="StreamingTV" required>
+                                <option value="No">Hayır</option>
+                                <option value="Yes">Evet</option>
+                                <option value="No internet service">İnternet servisi yok</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fields-row">
+                        <div class="field">
+                            <label for="StreamingMovies">Film Yayın Akışı</label>
+                            <select id="StreamingMovies" name="StreamingMovies" required>
+                                <option value="No">Hayır</option>
+                                <option value="Yes">Evet</option>
+                                <option value="No internet service">İnternet servisi yok</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sözleşme ve Ödeme -->
+                <section class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        </div>
+                        <h2>💳 Sözleşme ve Ödeme</h2>
+                    </div>
+                    <div class="fields-row">
+                        <div class="field">
+                            <label for="tenure">Abonelik Süresi (Ay)</label>
+                            <input type="number" id="tenure" name="tenure" min="0" max="72" value="12" required>
+                        </div>
+                        <div class="field">
+                            <label for="Contract">Sözleşme Türü</label>
+                            <select id="Contract" name="Contract" required>
+                                <option value="Month-to-month">Aylık</option>
+                                <option value="One year">1 Yıllık</option>
+                                <option value="Two year">2 Yıllık</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="PaperlessBilling">Kağıtsız Fatura (E-Fatura)</label>
+                            <select id="PaperlessBilling" name="PaperlessBilling" required>
+                                <option value="Yes">Evet</option>
+                                <option value="No">Hayır</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="PaymentMethod">Ödeme Yöntemi</label>
+                            <select id="PaymentMethod" name="PaymentMethod" required>
+                                <option value="Electronic check">Elektronik Çek</option>
+                                <option value="Mailed check">Posta Çeki</option>
+                                <option value="Bank transfer (automatic)">Banka Transferi (Otomatik)</option>
+                                <option value="Credit card (automatic)">Kredi Kartı (Otomatik)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="fields-row">
+                        <div class="field">
+                            <label for="MonthlyCharges">Aylık Ücret ($)</label>
+                            <input type="number" id="MonthlyCharges" name="MonthlyCharges" min="0" max="200" step="0.01" value="56.95" required>
+                        </div>
+                        <div class="field">
+                            <label for="TotalCharges">
+                                Toplam Ücret ($)
+                                <span id="total-formula-hint" style="font-size:0.72rem; font-weight:400; opacity:0.55; margin-left:6px;">= Ay × Aylık Ücret</span>
+                            </label>
+                            <input type="number" id="TotalCharges" name="TotalCharges" min="0" max="10000" step="0.01" value="683.40" required style="border-color: rgba(108,99,255,0.5);">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tahmin Butonu -->
+                <div class="submit-area">
+                    <button type="submit" id="predict-btn" class="btn-predict">
+                        <span class="btn-text">🔮 Tahmin Yap</span>
+                        <span class="btn-loader" style="display:none;">
+                            <svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="30 70" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></circle></svg>
+                            Tahmin hesaplanıyor...
+                        </span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Sonuç Kartı -->
+            <div id="result-card" class="result-card" style="display:none;">
+                <div class="result-header">
+                    <h3>📊 Tahmin Sonucu</h3>
+                    <button class="close-btn" onclick="document.getElementById('result-card').style.display='none'">&times;</button>
+                </div>
+                <div class="result-body">
+                    <div id="result-icon" class="result-icon"></div>
+                    <div id="result-prediction" class="result-prediction"></div>
+                    <div id="result-risk" class="result-risk"></div>
+
+                    <div class="result-metrics">
+                        <div class="metric">
+                            <span class="metric-label">Churn (Ayrılma) Olasılığı</span>
+                            <div class="progress-bar">
+                                <div id="churn-bar" class="progress-fill"></div>
+                            </div>
+                            <span id="churn-prob" class="metric-value"></span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Modelin Güven Düzeyi</span>
+                            <span id="confidence" class="metric-value confidence-val"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Alt Bilgi -->
+        <footer class="footer">
+            <p>Telco Müşteri Kaybı Tahmin Sistemi &bull; Makine Öğrenmesi ile Güçlendirildi &bull; <a href="/docs" target="_blank">API Dokümantasyonu</a></p>
+        </footer>
+    </div>
+
+    <script>
+        const form = document.getElementById('prediction-form');
+        const resultCard = document.getElementById('result-card');
+        const predictBtn = document.getElementById('predict-btn');
+
+        // ── Otomatik Toplam Ücret Hesaplama ──────────────────────────
+        const tenureInput = document.getElementById('tenure');
+        const monthlyInput = document.getElementById('MonthlyCharges');
+        const totalInput = document.getElementById('TotalCharges');
+
+        function toplamUcretiHesapla() {
+            const ay = parseFloat(tenureInput.value) || 0;
+            const aylik = parseFloat(monthlyInput.value) || 0;
+            const toplam = (ay * aylik).toFixed(2);
+            totalInput.value = toplam;
+            // Formül ipucunu güncelle
+            document.getElementById('total-formula-hint').textContent =
+                `= ${ay} ay × $${aylik} = $${toplam}`;
+        }
+
+        tenureInput.addEventListener('input', toplamUcretiHesapla);
+        monthlyInput.addEventListener('input', toplamUcretiHesapla);
+        // Sayfa yüklendiğinde de hesapla
+        toplamUcretiHesapla();
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Yükleniyor durumu
+            predictBtn.querySelector('.btn-text').style.display = 'none';
+            predictBtn.querySelector('.btn-loader').style.display = 'inline-flex';
+            predictBtn.disabled = true;
+
+            // Form verilerini topla
+            const formData = new FormData(form);
+            const data = {};
+            formData.forEach((value, key) => {
+                if (['SeniorCitizen', 'tenure'].includes(key)) {
+                    data[key] = parseInt(value);
+                } else if (['MonthlyCharges', 'TotalCharges'].includes(key)) {
+                    data[key] = parseFloat(value);
+                } else {
+                    data[key] = value;
+                }
+            });
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    sonucuGoster(result);
+                } else {
+                    alert('⚠️ Hata: ' + (result.error || 'Bilinmeyen bir hata oluştu.'));
+                }
+            } catch (err) {
+                alert('🔌 Bağlantı hatası: ' + err.message);
+            } finally {
+                predictBtn.querySelector('.btn-text').style.display = 'inline';
+                predictBtn.querySelector('.btn-loader').style.display = 'none';
+                predictBtn.disabled = false;
+            }
+        });
+
+        function sonucuGoster(result) {
+            const churnVar = result.prediction === 'Churn';
+
+            // İkon
+            const iconEl = document.getElementById('result-icon');
+            if (churnVar) {
+                iconEl.innerHTML = '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+                iconEl.className = 'result-icon churn';
+            } else {
+                iconEl.innerHTML = '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#51CF66" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>';
+                iconEl.className = 'result-icon no-churn';
+            }
+
+            // Tahmin metni
+            const predEl = document.getElementById('result-prediction');
+            predEl.textContent = churnVar
+                ? '⚠️ CHURN — Müşteri Aboneliği Bırakabilir!'
+                : '✅ KALIYOR — Müşteri Aboneliğini Sürdürecek';
+            predEl.className = 'result-prediction ' + (churnVar ? 'text-danger' : 'text-success');
+
+            // Risk seviyesi
+            const riskEl = document.getElementById('result-risk');
+            const riskMetin = { 'Dusuk': '🟢 Düşük Risk', 'Orta': '🟡 Orta Risk', 'Yuksek': '🔴 Yüksek Risk' };
+            riskEl.textContent = 'Risk Seviyesi: ' + (riskMetin[result.risk_level] || result.risk_level);
+            riskEl.className = 'result-risk risk-' + result.risk_level.toLowerCase();
+
+            // İlerleme çubuğu
+            const churnBar = document.getElementById('churn-bar');
+            const churnPct = (result.churn_probability * 100);
+            churnBar.style.width = churnPct + '%';
+            churnBar.className = 'progress-fill ' + (churnVar ? 'fill-danger' : 'fill-success');
+
+            // Değerler
+            document.getElementById('churn-prob').textContent = churnPct.toFixed(1) + '%';
+            document.getElementById('confidence').textContent = result.confidence;
+
+            // Animasyonla göster
+            resultCard.style.display = 'block';
+            resultCard.classList.remove('slide-in');
+            void resultCard.offsetWidth;
+            resultCard.classList.add('slide-in');
+
+            // Sonuca kaydır
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    </script>
+</body>
+</html>
